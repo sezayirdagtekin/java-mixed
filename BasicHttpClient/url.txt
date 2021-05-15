@@ -1,3 +1,4 @@
 https://www.google.com/
 https://openjdk.java.net/
+https://pluralsight.com/
 https://www.google.com/500
