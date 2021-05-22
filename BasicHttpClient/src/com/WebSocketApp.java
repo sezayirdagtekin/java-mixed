@@ -1,0 +1,55 @@
+package com;
+
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.WebSocket;
+import java.time.Duration;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.CountDownLatch;
+
+public class WebSocketApp {
+
+	public static void main(String[] args) throws InterruptedException {
+		int msgCount = 5;
+		CountDownLatch receiveLatch = new CountDownLatch(msgCount);
+
+		final String serverUrl = "ws://echo.websocket.org";
+
+		CompletableFuture<WebSocket> wsFuture = HttpClient.newHttpClient().newWebSocketBuilder()
+				.connectTimeout(Duration.ofSeconds(3))
+				.buildAsync(URI.create(serverUrl), new EchoListener(receiveLatch));
+
+		wsFuture.thenAccept(webSocket -> {
+			webSocket.request(msgCount);
+			for (int i = 0; i < msgCount; i++) {
+				webSocket.sendText("Message " + i, true);
+
+			}
+		});
+
+		receiveLatch.await();
+
+	}
+
+	static class EchoListener implements WebSocket.Listener {
+		CountDownLatch receiveLatch;
+
+		public EchoListener(CountDownLatch receiveLatch) {
+			this.receiveLatch = receiveLatch;
+		}
+
+		@Override
+		public void onOpen(WebSocket webSocket) {
+			System.out.println("Websocket opened...");
+		}
+
+		@Override
+		public CompletionStage<?> onText(WebSocket webSocket, CharSequence data, boolean last) {
+			System.out.println("onText:" + data);
+			receiveLatch.countDown();
+			return null;
+		}
+
+	}
+}
