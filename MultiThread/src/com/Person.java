@@ -9,7 +9,9 @@ public class Person {
 	}
 
 	public long getNum() {
-		return num;
+		synchronized (lock) {
+			return num;
+		}
 	}
 
 	void incrementValue() {
